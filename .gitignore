@@ -3,6 +3,10 @@ playwright-report
 test-results
 blob-report
 coverage
+playwright/.auth
+storageState.json
+*.session.json
+
 .env
 .env.*
 !.env.example

@@ -8,8 +8,8 @@
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
     "test:debug": "playwright test --debug",
-    "codegen:adult": "playwright codegen https://uat-prs-eu.sadhguru.org/event/participant-registration-non-sso-106",
-    "codegen:minor": "playwright codegen https://uat-prs-eu.sadhguru.org/event/minor-registration-non-sso-103",
+    "codegen:adult": "dotenv -- bash -c 'playwright codegen \"$TARGET_BASE_URL$TARGET_ADULT_REGISTRATION_FLOW_PATH\"'",
+    "codegen:minor": "dotenv -- bash -c 'playwright codegen \"$TARGET_BASE_URL$TARGET_MINOR_REGISTRATION_FLOW_PATH\"'",
     "report": "playwright show-report"
   },
   "repository": {
@@ -28,6 +28,7 @@
     "@playwright/test": "^1.59.1",
     "@types/node": "^22.15.17",
     "dotenv": "^16.5.0",
+    "dotenv-cli": "^11.0.0",
     "typescript": "^5.8.3"
   }
 }

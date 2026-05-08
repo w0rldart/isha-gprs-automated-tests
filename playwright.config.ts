@@ -4,9 +4,11 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
-const baseURL =
-  process.env.BASE_URL ||
-  'https://uat-prs-eu.sadhguru.org';
+const baseURL = process.env.TARGET_BASE_URL;
+
+if (!baseURL) {
+  throw new Error('Missing required env var: TARGET_BASE_URL');
+}
 
 export default defineConfig({
   testDir: './tests',
