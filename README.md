@@ -9,7 +9,7 @@ This repository is meant to give a practical starting point for automating the U
 The initial test scope focuses on the easiest and most repeatable browser flows from the supplied test scenarios:
 
 - Adult participant registration success flow.
-- Discount coupon flow (<ASK FOR A CODE>) for a 10% discount on the base price.
+- Discount coupon flow ("**_ASK FOR A CODE_**") for a 10% discount on the base price.
 - Payment failure and retry flow.
 - Core form validations such as email, phone, age, declarations, and WhatsApp field behavior.
 
@@ -50,10 +50,7 @@ Clone the repository and install dependencies:
 git clone https://github.com/w0rldart/isha-gprs-automated-tests.git
 cd isha-gprs-automated-tests
 npm install
-npx playwright install
 ```
-
-Playwright recommends installing the package dependencies first and then installing the browser binaries before running tests.
 
 ## Environment configuration
 
@@ -97,7 +94,7 @@ TEST_PAYMENT_CVC=123
 | `TEST_USER_NAME` | Display or form name value for the test user. |
 | `TEST_USER_EMAIL` | Email value used during form submission. |
 | `TEST_USER_PHONE` | Primary phone number for the test user. |
-| `TEST_USER_WA_PHONE` | WhatsaApp phone number. |
+| `TEST_USER_WA_PHONE` | WhatsApp phone number. |
 | `TEST_USER_AGE` | Age value for minimum-age validation and happy-path coverage. |
 | `TEST_USER_COUNTRY` | Country selection label or value. |
 | `TEST_USER_POSTAL_CODE` | Postal code or pincode used by the form. |
@@ -132,8 +129,6 @@ Run in debug mode:
 npm run test:debug
 ```
 
-Playwright supports headed runs, a visual UI mode, and debugging workflows directly through the Playwright test runner.
-
 ## Generating tests from the browser
 
 To record flows directly from browser interactions:
@@ -143,9 +138,9 @@ npm run codegen:adult
 npm run codegen:minor
 ```
 
-These scripts use `playwright codegen`, which opens a real browser window and generates Playwright test steps from user interactions.
+These scripts open a browser and generate Playwright test steps from your interactions.
 
-A practical workflow is:
+Workflow:
 
 1. Run `npm run codegen:adult`.
 2. Complete the PRS form manually in the opened browser.
@@ -153,38 +148,19 @@ A practical workflow is:
 4. Replace any broad fallback selectors in `tests/registration.spec.ts` with the generated ones.
 5. Re-run the test with `npm run test:headed`.
 
-## Current test scope
+## Test files
 
-### `tests/registration.spec.ts`
+**`tests/registration.spec.ts`** — Main end-to-end flows:
+- Adult registration success
+- Discount coupon application and discounted payment
+- Payment failure and retry
 
-This file contains the main end-to-end flows:
-
-- Adult registration success flow.
-- Discount coupon application and discounted payment flow.
-- Payment failure followed by retry and success.
-
-### `tests/validations.spec.ts`
-
-This file contains key validation and conditional-rendering checks:
-
-- Invalid email format should be rejected.
-- India phone number should enforce the expected 10-digit behavior.
-- Age below 18 should be rejected in the adult registration flow.
-- Declarations must be agreed before proceeding.
-- WhatsApp field behavior should change based on whether WhatsApp is the same as phone.
-
-## Recommended execution order
-
-For the fastest stabilization, use this order:
-
-1. Adult registration success.
-2. Discount coupon flow.
-3. Payment failure and retry.
-4. Validation tests.
-5. Minor registration.
-6. Optional SSO resume flow.
-
-This order mirrors the simplest-to-most-complex path based on the scenario document, where SSO resume and minor registration involve more state handling and input complexity.
+**`tests/validations.spec.ts`** — Key validations:
+- Email format validation
+- 10-digit India phone number enforcement
+- Age minimum (18+) validation
+- Declaration consent requirement
+- WhatsApp field behavior
 
 ## Reports, traces, screenshots, and video
 
@@ -248,20 +224,6 @@ After the first successful run, the best next enhancements are:
 - Add an `sso-resume.spec.ts` file.
 - Add inbox verification using a test mailbox API if email validation becomes required.
 - Add tags such as `@smoke`, `@regression`, and `@payment` for targeted runs.
-
-## Useful commands
-
-```bash
-npm install
-npx playwright install
-npm test
-npm run test:headed
-npm run test:ui
-npm run test:debug
-npm run codegen:adult
-npm run codegen:minor
-npm run report
-```
 
 ## Publishing notes
 
