@@ -1,55 +1,50 @@
-# Isha GPRS Automated Tests
+# Isha GPRS — Automated Registration Tests
 
-Browser-based end-to-end tests for PRS registration flows using [Playwright](https://playwright.dev).
+Automated browser tests that simulate a real person registering for an Isha program through the PRS (Participant Registration System) form. The tests open a browser, fill in every field, submit the form, and complete payment — just like a participant would.
 
-## What this covers
+Built with [Playwright](https://playwright.dev) (browser automation) and [Faker](https://fakerjs.dev) (realistic fake data).
 
-| Area | Tests |
+## What does this test?
+
+The registration form is a **two-step process**:
+
+1. **Step 1 — Registration form:** Fill in personal details (name, email, phone), address, dietary needs, and accept terms & conditions
+2. **Step 2 — Payment:** Review the summary, optionally apply a promo code, and pay via Stripe
+
+The test suite checks both steps:
+
+### Form validation checks (Step 1 only — quick, no payment)
+
+These tests check that the form catches mistakes before submission:
+
+- Invalid email address is rejected
+- Age below 18 is rejected on the adult form
+- Phone number with too few digits is rejected
+- WhatsApp number field appears/disappears based on the radio button selection
+
+### Full registration flows (Step 1 → Step 2 → Payment)
+
+These tests go through the entire process from start to finish:
+
+| What's tested | Variations |
 |---|---|
-| **Step 1 — Form validations** | Email format, phone digits, age boundary (18), WhatsApp field toggle |
-| **Step 1 → Step 2 — Submission** | Complete form reaches payment summary |
-| **E2E by country** | Switzerland, Germany, India, UK, France, USA |
-| **E2E by gender** | Male, Female, Other |
-| **E2E WhatsApp** | Same as phone / different number |
-| **E2E promo code** | Apply discount code and complete payment |
-| **E2E edge cases** | Boundary age 18, dietary restrictions, payment failure & retry |
+| **Different countries** | Switzerland, Germany, India, UK, France — each with matching phone prefix, postal code, state, and city |
+| **Different genders** | Male, Female, Other |
+| **WhatsApp number** | Same as phone number / different number |
+| **Promo/discount code** | Enter a discount code and verify it's applied |
+| **Minimum age** | User who is exactly 18 years old |
+| **Dietary restrictions** | "Yes" selection with allergy details and severity |
+| **Payment failure** | Simulates a failed payment and retries |
 
-21 tests total — 6 lightweight validation tests + 15 full E2E flows.
-
-## Architecture
-
-```text
-tests/
-├── helpers/
-│   └── test-data.ts            # TestData type, country profiles, factory
-├── pages/
-│   ├── step1-form.page.ts      # Page Object: registration form (step 1)
-│   └── step2-payment.page.ts   # Page Object: payment summary (step 2)
-├── step1-form.spec.ts          # Step 1 field validations (no payment)
-└── registration.spec.ts        # E2E flows: country × gender × options
-```
-
-### Page Object Models
-
-The form is a **two-step wizard**. Each step has its own Page Object:
-
-- **`Step1FormPage`** — personal details, address, dietary question, T&Cs, submit. Exposes individual field methods (`fillFirstName`, `selectCountry`, etc.) and a `fillAll(data)` convenience method.
-- **`Step2PaymentPage`** — payment summary, promo code, Stripe payment iframe, success confirmation.
+**Total: 21 tests** — 6 validation + 15 full end-to-end.
 
 ### Test data
 
-`makeTestData()` generates a randomised user on every call:
+Every test run generates **fresh, randomised data** — random names, email addresses, and street addresses. Each run also randomly picks a country, gender, age, and form options so the tests cover a wide variety of combinations over time.
 
-- Random first/last name and email via [Faker](https://fakerjs.dev)
-- Random country profile (phone, postal code, state, city)
-- Random gender, age, WhatsApp preference, dietary flag
-- Override any field: `makeTestData({ country: 'India', age: '18' })`
+## Getting started
 
-Pin to a specific country: `makeTestDataForCountry('germany')`.
-
-**Available country profiles:** `switzerland`, `germany`, `india`, `uk`, `france`, `usa`
-
-## Setup
+### 1. Install
 
 ```bash
 git clone https://github.com/w0rldart/isha-gprs-automated-tests.git
@@ -58,109 +53,129 @@ npm install
 npx playwright install
 ```
 
-## Environment variables
+### 2. Configure
 
 ```bash
 cp .env.example .env
 ```
 
-Required variables:
+Open `.env` and fill in:
 
-| Variable | Description |
-|---|---|
-| `TARGET_BASE_URL` | Base URL of the PRS environment |
-| `TARGET_ADULT_REGISTRATION_FLOW_PATH` | Path to the adult registration form |
-| `TARGET_MINOR_REGISTRATION_FLOW_PATH` | Path to the minor registration form |
-| `TEST_PROMO_CODE` | *(optional)* Discount code — falls back to built-in default |
+| Variable | What it is | Example |
+|---|---|---|
+| `TARGET_BASE_URL` | The URL of the PRS environment to test against | `https://uat-prs-eu.sadhguru.org` |
+| `TARGET_ADULT_REGISTRATION_FLOW_PATH` | The path to the adult registration form | `/event/some-registration-path` |
+| `TARGET_MINOR_REGISTRATION_FLOW_PATH` | The path to the minor registration form | `/event/minor-registration-path` |
+| `TEST_PROMO_CODE` | *(optional)* A discount code to test with | `IET10m2yz` |
 
 > [!NOTE]
-> User data (name, email, phone, address) is generated automatically by Faker. The `TEST_USER_*` env vars from `.env.example` are kept for reference but are **not required** — the test suite generates its own data each run.
+> You do **not** need to configure any user details (name, email, phone, etc). The tests generate realistic fake data automatically on every run.
 
-## Running tests
+### 3. Run
 
 ```bash
-# Full suite (headless)
+# Run all tests (browser runs in the background)
 npm test
 
-# Visible browser
+# Run with a visible browser (so you can watch what's happening)
 npm run test:headed
 
-# Interactive UI mode
+# Run in interactive UI mode (pick & choose tests, see results live)
 npm run test:ui
 
-# Debug mode (step through)
+# Run in debug mode (pause at each step)
 npm run test:debug
+```
 
-# Open last HTML report
+### 4. View results
+
+After a test run, open the HTML report:
+
+```bash
 npm run report
 ```
 
-### Run a specific group
+This opens a detailed report in your browser showing which tests passed or failed, with screenshots and error messages for any failures.
+
+## Running specific tests
+
+You don't have to run everything. You can target specific groups:
 
 ```bash
-# Only step 1 validations
+# Only the quick form validation checks (no payment)
 npx playwright test step1-form
 
-# Only E2E registration flows
+# Only the full registration flows
 npx playwright test registration
 
-# Only a specific country
+# Only tests for a specific country
 npx playwright test -g "switzerland"
+npx playwright test -g "india"
+
+# Only the promo code test
+npx playwright test -g "promo"
 ```
 
-## Codegen
+## Project structure
 
-Use Playwright codegen to inspect the live form and discover selectors:
+```text
+tests/
+├── helpers/
+│   └── test-data.ts              ← Fake user data generation
+├── pages/
+│   ├── step1-form.page.ts        ← How to interact with the registration form
+│   └── step2-payment.page.ts     ← How to interact with the payment page
+├── step1-form.spec.ts            ← Form validation tests
+└── registration.spec.ts          ← Full registration flow tests
+```
+
+- **`test-data.ts`** — Generates a fake participant with a random name, email, phone number, and address. Has built-in profiles for different countries (Switzerland, Germany, India, UK, France) with correct phone formats, postal codes, and states.
+- **`step1-form.page.ts`** — Contains the logic for filling in the registration form: typing into text fields, selecting from dropdowns, picking radio buttons, choosing phone country codes, and accepting terms.
+- **`step2-payment.page.ts`** — Contains the logic for the payment page: applying a promo code, filling in Stripe card details, and confirming success.
+- **`step1-form.spec.ts`** — The actual validation tests (6 tests).
+- **`registration.spec.ts`** — The actual end-to-end tests (15 tests).
+
+## Codegen (for developers)
+
+If the form changes and tests break, use Playwright's codegen tool to inspect the live form and find updated selectors:
 
 ```bash
 npm run codegen:adult
 npm run codegen:minor
 ```
 
-Use the output to inform locator updates in the Page Objects — don't paste raw codegen output as final test code.
+This opens a browser where you can interact with the form while Playwright records the actions and shows you the selectors it would use.
 
-## Selector strategy
+## CI (GitHub Actions)
 
-| Field type | Approach |
-|---|---|
-| Text inputs | `page.getByLabel()` matching the `<label>` text |
-| Buttons | `page.getByRole('button', { name: ... })` |
-| Radio groups | Scoped to `div[role="group"]` by question text |
-| React-Select dropdowns | Click combobox → type → click filtered option |
-| Phone (react-tel-input) | `.react-tel-input input.form-control[type="tel"]` |
-| Checkboxes | `#tnc_gdpr_consent`, `#tnc_refund` by ID |
-| Stripe payment | `page.frameLocator('iframe')` for secure input frame |
+Tests can run automatically on every push via the GitHub Actions workflow in `.github/workflows/playwright.yml`.
 
-Avoid Chakra-generated CSS class names — they're not stable across builds.
+- **Locally:** Test configuration lives in `.env` (never committed to git)
+- **In CI:** Configuration is stored in GitHub Secrets
+- **On failure:** The workflow saves screenshots, videos, and traces as downloadable artifacts
 
-## CI
+## Not implemented yet
 
-The repository includes a GitHub Actions workflow in `.github/workflows/playwright.yml`.
-
-- Local config: `.env` (never committed)
-- CI config: GitHub Secrets
-- Artifacts: HTML report, screenshots, traces, and videos on failure
-
-## Current limitations
-
-Not implemented yet:
-
-- Email inbox verification
+- Email/inbox verification after registration
 - Epass verification
-- Minor registration automation
-- Optional SSO resume flow
-- Deeper resilience around payment-provider UI changes
+- Minor (under 18) registration flow
+- SSO login-based registration
+- Testing against changes in Stripe's payment UI
 
 ## Troubleshooting
 
-| Problem | Fix |
+| What went wrong | What to do |
 |---|---|
-| Missing required env variable | Ensure `.env` exists with `TARGET_BASE_URL` and `TARGET_ADULT_REGISTRATION_FLOW_PATH` |
-| Selectors no longer match | Run `npm run codegen:adult` to discover updated locators, then update the Page Objects |
-| Payment fields not found | Stripe renders secure fields inside iframes — the test uses `frameLocator()` to reach them |
-| CI fails but local works | Download the Playwright report artifact from the GitHub Actions run |
+| "Missing required env var" | Make sure your `.env` file exists and has `TARGET_BASE_URL` and `TARGET_ADULT_REGISTRATION_FLOW_PATH` filled in |
+| Tests used to pass but now fail | The form may have changed. Run `npm run codegen:adult` to inspect the current form and update the Page Object files |
+| "Payment fields not found" | Stripe renders card inputs inside a secure iframe. If Stripe changed their frame structure, the `step2-payment.page.ts` file needs updating |
+| Tests pass locally but fail in CI | Download the Playwright report artifact from the GitHub Actions run to see screenshots and error details |
 
-## Public repo safety
+## Security
 
 > [!CAUTION]
-> This repository is public. Never commit `.env`, real user data, credentials, or session artifacts. Use GitHub Secrets for CI. Enable secret scanning and push protection.
+> This repository is public.
+>
+> - **Never** commit `.env` or any file containing real URLs, credentials, or personal data
+> - Use GitHub Secrets for CI configuration
+> - Enable secret scanning and push protection on the repository
