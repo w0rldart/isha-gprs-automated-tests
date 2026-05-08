@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig } from '@playwright/test';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -12,34 +12,21 @@ if (!baseURL) {
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: false,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  timeout: 90_000,
+  timeout: 60000,
   expect: {
-    timeout: 15_000
+    timeout: 10000,
   },
-  reporter: [
-    ['list'],
-    ['html', { open: 'never' }]
-  ],
+  fullyParallel: false,
+  retries: process.env.CI ? 2 : 0,
+  reporter: [['html'], ['list']],
   use: {
     baseURL,
-    headless: true,
+    headless: !process.env.PWDEBUG,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'on-first-retry',
-    actionTimeout: 15_000,
-    navigationTimeout: 30_000
+    viewport: { width: 1440, height: 1200 },
+    actionTimeout: 15000,
+    navigationTimeout: 30000,
   },
-  projects: [
-    {
-      name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1440, height: 1200 }
-      }
-    }
-  ]
 });
