@@ -13,7 +13,7 @@ const testData = {
   waPhone: process.env.TEST_USER_WA_PHONE,
   age: process.env.TEST_USER_AGE,
   country: process.env.TEST_USER_COUNTRY,
-  pincode: process.env.TEST_USER_PINCODE,
+  postalCode: process.env.TEST_USER_POSTAL_CODE,
   promoCode: process.env.TEST_PROMO_CODE,
   cardNumber: process.env.TEST_PAYMENT_CARD_NUMBER,
   expiry: process.env.TEST_PAYMENT_EXPIRY,
@@ -95,10 +95,10 @@ async function fillAdultRegistrationForm(page: Page) {
   ], testData.age);
 
   await fillIfVisible(page, [
-    'input[name*="pincode"]',
+    'input[name*="postalCode"]',
     'input[name*="postal"]',
-    'input[placeholder*="Pincode"]'
-  ], testData.pincode);
+    'input[placeholder*="postalCode"]'
+  ], testData.postalCode);
 
   await clickIfVisible(page, [
     'label:has-text("Yes")',
@@ -135,7 +135,7 @@ async function completeStripePayment(page: Page) {
 
   const zip = frame.locator('input[name="postal"], input[placeholder*="ZIP"], input[placeholder*="Postal"]').first();
   if (await zip.count()) {
-    await zip.fill(testData.pincode);
+    await zip.fill(testData.postalCode);
   }
 
   await page.getByRole('button', { name: /pay/i }).last().click();
